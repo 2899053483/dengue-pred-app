@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  base: '/dengue-pred-ai/', 
   plugins: [react()],
+  base: '/dengue-pred-app/', // <--- 加上这一行！注意前后都要有斜杠
 })
