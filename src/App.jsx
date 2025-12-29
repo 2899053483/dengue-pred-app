@@ -3,7 +3,8 @@ import {
   Dna, Upload, FileText, Activity, LogOut, User, 
   ChevronRight, AlertTriangle, CheckCircle, Download, 
   Database, BarChart2, Shield, Play, X, Settings, 
-  Users, Calendar, FileCode, Menu, Sun, Bell
+  Users, Calendar, FileCode, Menu, Sun, Bell, Info, 
+  TrendingUp, MapPin
 } from 'lucide-react';
 
 // --- 模拟数据与常量 ---
@@ -16,12 +17,83 @@ const TEAM_MEMBERS = [
 ];
 
 const RECENT_FILES = [
-  { id: 1, name: "DENV_Sample_SG_2024.fasta", date: "2024-12-25", size: "2.4 MB", status: "Analyzed" },
-  { id: 2, name: "Batch_MY_Selangor_03.fasta", date: "2024-12-23", size: "5.1 MB", status: "Analyzed" },
-  { id: 3, name: "GenBank_Export_Ref.csv", date: "2024-12-20", size: "1.2 MB", status: "Pending" },
+  { id: 1, name: "DENV_Sample_SG_2024.fasta", date: "2024-12-25", size: "2.4 MB", status: "Analyzed", type: "fasta" },
+  { id: 2, name: "Batch_MY_Selangor_03.fasta", date: "2024-12-23", size: "5.1 MB", status: "Analyzed", type: "fasta" },
+  { id: 3, name: "GenBank_Export_Ref.csv", date: "2024-12-20", size: "1.2 MB", status: "Pending", type: "csv" },
 ];
 
-// --- 组件: 处理中界面 (Processing Overlay) ---
+// --- 组件: 文件预览弹窗 ---
+const FilePreviewModal = ({ file, onClose }) => {
+  if (!file) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col max-h-[80vh]">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <FileCode className="text-blue-600 dark:text-blue-400" size={20} />
+            <div>
+              <h3 className="font-bold text-slate-800 dark:text-white text-sm">{file.name}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{file.size} • Read-only Preview</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-500 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="p-0 overflow-auto bg-slate-50 dark:bg-slate-900 flex-1 font-mono text-xs">
+          {file.type === 'fasta' ? (
+            <div className="p-4 text-slate-600 dark:text-slate-300">
+              <span className="text-blue-600 dark:text-blue-400 block mb-1">{`>Dengue_Virus_Type_2_Strain_SG_2025 | Collection_Date: 2025-01-15 | Region: Selangor`}</span>
+              <p className="break-all leading-relaxed">
+                AGCTTTCAATATGCTGAAACGCGAGAGAAACCGCGTGTCGACTGTGCAACAGCTGACAAAGAGATTCTCACTTGGA
+                ATGCTGCAGGGACGAGGACCATTAAAACTGTTCATGGCCCTGGTGGCGTTCCTTCGTTTCCTAACAATCCCACCAA
+                CAGCAGGGATATTGAAGAGATGGGGAACAATTAAAAAATCAAAAGCTATTAATGTTTTGAGAGGGTTCAGGAAAGA
+                GATTGGAAGGATGCTGAACATCTTGAATAGGAGACGCAGATCTGCAGGCATGATCATTATGCTGATTCCAACAGTG
+                ATGGCGTTCCATTTAACCACACGTAACGGAGAACCACACATGATCGTCAGCAGACAAGAGAAAGGGAAAAGTCTTC...
+              </p>
+              <div className="mt-4 text-slate-400 italic">[Preview truncated showing first 400bp]</div>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <th className="p-2 border-b border-r border-slate-300 dark:border-slate-700">ID</th>
+                  <th className="p-2 border-b border-r border-slate-300 dark:border-slate-700">Collection_Date</th>
+                  <th className="p-2 border-b border-r border-slate-300 dark:border-slate-700">Location</th>
+                  <th className="p-2 border-b border-slate-300 dark:border-slate-700">Serotype</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-600 dark:text-slate-400">
+                <tr>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">SEQ_001</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">2024-12-01</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">Subang Jaya</td>
+                  <td className="p-2 border-b border-slate-200 dark:border-slate-700">DENV-2</td>
+                </tr>
+                <tr>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">SEQ_002</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">2024-12-03</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">Petaling</td>
+                  <td className="p-2 border-b border-slate-200 dark:border-slate-700">DENV-1</td>
+                </tr>
+                <tr>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">SEQ_003</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">2024-12-05</td>
+                  <td className="p-2 border-b border-r border-slate-200 dark:border-slate-700">Klang</td>
+                  <td className="p-2 border-b border-slate-200 dark:border-slate-700">DENV-2</td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- 组件: 处理中界面 ---
 const ProcessingScreen = ({ onComplete, onCancel, modelType }) => {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
@@ -29,7 +101,7 @@ const ProcessingScreen = ({ onComplete, onCancel, modelType }) => {
   useEffect(() => {
     const steps = [
       "Initializing secure environment...",
-      "Validating FASTA format integrity (FR-002)...",
+      "Validating File format integrity...",
       "Cleaning sequence data: Removing invalid chars...",
       "Running MAFFT Multiple Sequence Alignment...",
       "Alignment Score: 98.5% (Consensus reached)",
@@ -58,7 +130,7 @@ const ProcessingScreen = ({ onComplete, onCancel, modelType }) => {
   }, [onComplete, modelType]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-sm p-6 text-white">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-sm p-6 text-white animate-fade-in">
       <button onClick={onCancel} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full transition-colors">
         <X size={32} />
       </button>
@@ -100,10 +172,17 @@ export default function DenguePredApp() {
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  
+  // States for new features/fixes
+  const [previewFile, setPreviewFile] = useState(null);
+  const [useMafft, setUseMafft] = useState(true);
+  const [useEntropy, setUseEntropy] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigateTo = (screen) => {
     setActiveTab(screen);
     setShowResults(false);
+    setIsMobileMenuOpen(false); 
     if (screen === 'analysis') setFile(null);
   };
 
@@ -114,7 +193,7 @@ export default function DenguePredApp() {
   };
 
   const startAnalysis = () => {
-    if (!file) return alert("Please upload a FASTA file first.");
+    if (!file) return alert("Please upload a file first.");
     setIsProcessing(true);
   };
 
@@ -130,6 +209,42 @@ export default function DenguePredApp() {
         </div>
         <div className="bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
           <Calendar size={16} /> Dec 2025
+        </div>
+      </div>
+
+      {/* Epidemic Status Overview */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg">
+              <TrendingUp size={20} />
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-white">Current Epidemic Status</h3>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+            <span className="font-bold text-red-500">Alert Level: High.</span> Recent surveillance data indicates a <strong>15% increase</strong> in Dengue cases in the Selangor region compared to last month. 
+            AI models predict a potential outbreak peak in <strong>2 weeks</strong> due to emerging mutations in Serotype 2.
+          </p>
+          <div className="flex gap-4 text-xs font-mono text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1"><MapPin size={12}/> Hotspot: Subang Jaya</span>
+            <span className="flex items-center gap-1"><Dna size={12}/> Strain: DENV-2 (Mutated)</span>
+          </div>
+        </div>
+        
+        {/* Simple Simulated Chart (Trend) */}
+        <div className="flex-1 h-32 flex items-end justify-between gap-1 px-4 border-b border-l border-slate-200 dark:border-slate-600 pb-1">
+          {[30, 35, 32, 40, 45, 50, 65, 70, 60, 80, 85, 95].map((h, i) => (
+             <div key={i} className="w-full h-full bg-blue-200 dark:bg-blue-900 relative group rounded-t-sm overflow-hidden">
+               {/* Fixed: Added h-full above, and using absolute positioning for bar */}
+               <div 
+                 style={{ height: `${h}%` }} 
+                 className={`absolute bottom-0 w-full transition-all duration-1000 ${i > 8 ? 'bg-red-500 dark:bg-red-600' : 'bg-blue-500 dark:bg-blue-600'}`}
+               ></div>
+               <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-[10px] bg-black text-white px-1 rounded whitespace-nowrap z-10">
+                 Week {i+1}: {h} cases
+               </div>
+             </div>
+          ))}
         </div>
       </div>
 
@@ -207,9 +322,26 @@ export default function DenguePredApp() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">1. Upload Genome Data</label>
+                
+                {/* Upload Label with Tooltip */}
+                <div className="flex items-center gap-2 mb-2 relative group w-fit">
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">1. Upload Genome Data</label>
+                  <Info size={16} className="text-slate-400 cursor-help hover:text-blue-500 transition-colors" />
+                  <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-slate-700">
+                    <div className="mb-2">
+                      <span className="font-bold text-blue-300 block mb-1">FASTA Format (.fasta)</span>
+                      Text-based format for representing nucleotide sequences.
+                    </div>
+                    <div>
+                      <span className="font-bold text-green-300 block mb-1">CSV Format (.csv)</span>
+                      Structured dataset containing metadata and sequences.
+                    </div>
+                    <div className="absolute left-6 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900"></div>
+                  </div>
+                </div>
+
                 <div 
-                  onClick={() => setFile({ name: "DENV_Seq_Batch_2025.fasta", size: "3.2 MB" })}
+                  onClick={() => setFile({ name: "DENV_Seq_Batch_2025.csv", size: "3.2 MB" })}
                   className={`border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center cursor-pointer transition-all ${
                     file 
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
@@ -231,8 +363,8 @@ export default function DenguePredApp() {
                   ) : (
                     <>
                       <Upload size={40} className="text-slate-400 dark:text-slate-500 mb-2" />
-                      <p className="font-bold text-slate-600 dark:text-slate-300">Click to Upload FASTA</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Supports .fasta, .txt (Max 10MB)</p>
+                      <p className="font-bold text-slate-600 dark:text-slate-300">Click to Upload File</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Supports .fasta, .csv (Max 500MB)</p>
                     </>
                   )}
                 </div>
@@ -270,12 +402,22 @@ export default function DenguePredApp() {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">3. Preprocessing</label>
                   <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <input type="checkbox" checked readOnly className="rounded text-blue-600" />
+                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={useMafft} 
+                        onChange={(e) => setUseMafft(e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500" 
+                      />
                       Auto-align sequences (MAFFT)
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <input type="checkbox" checked readOnly className="rounded text-blue-600" />
+                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={useEntropy} 
+                        onChange={(e) => setUseEntropy(e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500" 
+                      />
                       Calculate Shannon Entropy
                     </label>
                   </div>
@@ -439,7 +581,12 @@ export default function DenguePredApp() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <button className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">View</button>
+                  <button 
+                    onClick={() => setPreviewFile(file)}
+                    className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                  >
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
@@ -469,12 +616,23 @@ export default function DenguePredApp() {
           </div>
         ))}
         
+        {/* Supervisor Card */}
         <div className="bg-slate-800 dark:bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col items-center text-center text-white">
           <div className="w-16 h-16 bg-slate-700 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4 font-bold text-xl">
             AH
           </div>
           <h3 className="font-bold text-lg">Dr. Abdul Hadi Mohamad</h3>
           <p className="text-slate-400 text-sm mt-2">Project Supervisor</p>
+        </div>
+
+        {/* New: Industry Client Card */}
+        <div className="bg-slate-900 dark:bg-black p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col items-center text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded-bl">CLIENT</div>
+          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-yellow-500 mb-4 font-bold text-xl border border-slate-700">
+            W
+          </div>
+          <h3 className="font-bold text-lg">Prof. Wong Eng Hwa</h3>
+          <p className="text-slate-400 text-sm mt-2">Industry Client</p>
         </div>
       </div>
     </div>
@@ -635,7 +793,7 @@ export default function DenguePredApp() {
     </div>
   );
 
-  // --- 主渲染逻辑 (Update: Main wrapper handles dark mode class) ---
+  // --- 主渲染逻辑 ---
   if (currentScreen === 'login') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -670,13 +828,33 @@ export default function DenguePredApp() {
 
   return (
     <div 
-        className={`min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 flex transition-all duration-500 ${isGrayscale ? 'grayscale' : ''} ${themeMode === 'dark' ? 'dark' : ''}`}
-        style={{ backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc' }} // <--- 强制变色补丁
-      >      {/* Sidebar Navigation */}
-      <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 hidden md:flex flex-col fixed h-full z-10 transition-colors">
-        <div className="p-6 flex items-center gap-3 text-blue-700 dark:text-blue-400 font-bold text-xl border-b border-slate-100 dark:border-slate-700">
-          <div className="p-2 bg-blue-100 dark:bg-slate-700 rounded-lg"><Dna size={24} /></div>
-          DenguePred
+      className={`min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 flex transition-all duration-500 ${isGrayscale ? 'grayscale' : ''} ${themeMode === 'dark' ? 'dark' : ''}`}
+      style={{ backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc' }}
+    >
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar Navigation - Bug Fix 3: Logic for mobile toggle */}
+      <aside className={`
+        w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 
+        flex flex-col fixed h-full z-40 transition-transform duration-300
+        ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} 
+        md:translate-x-0 md:shadow-none
+      `}>
+        <div className="p-6 flex items-center justify-between md:justify-start gap-3 text-blue-700 dark:text-blue-400 font-bold text-xl border-b border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-slate-700 rounded-lg"><Dna size={24} /></div>
+            DenguePred
+          </div>
+          {/* Close button for mobile */}
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-slate-500">
+            <X size={20} />
+          </button>
         </div>
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -731,7 +909,13 @@ export default function DenguePredApp() {
           <div className="flex items-center gap-2 font-bold text-blue-700 dark:text-blue-400">
             <Dna size={24} /> DenguePred
           </div>
-          <button className="text-slate-600 dark:text-slate-300"><Menu /></button>
+          {/* Bug Fix 3: Mobile Menu Trigger */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="text-slate-600 dark:text-slate-300 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+          >
+            <Menu />
+          </button>
         </div>
 
         {activeTab === 'dashboard' && renderDashboard()}
@@ -750,6 +934,14 @@ export default function DenguePredApp() {
             setIsProcessing(false);
             setShowResults(true);
           }} 
+        />
+      )}
+
+      {/* Bug Fix 1: File Preview Modal */}
+      {previewFile && (
+        <FilePreviewModal 
+          file={previewFile} 
+          onClose={() => setPreviewFile(null)} 
         />
       )}
     </div>
